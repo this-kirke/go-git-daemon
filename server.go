@@ -15,6 +15,7 @@ import (
 	"time"
 
 	"github.com/git-lfs/pktline"
+	"github.com/go-git/go-billy/v6/osfs"
 )
 
 var (
@@ -338,9 +339,16 @@ func (s *Server) handleConn(ctx context.Context, c net.Conn) {
 			return
 		}
 
-		if !s.ExportAll && !isExportOk(path) {
-			s.fatal(c, ErrAccessDenied) // nolint: errcheck
-			return
+		if !s.ExportAll {
+			// Use filesystem interface, defaulting to OS filesystem for backward compatibility
+			fs := s.Filesystem
+			if fs == nil {
+				fs = osfs.New("/")
+			}
+			if !isExportOkFS(fs, path) {
+				s.fatal(c, ErrAccessDenied) // nolint: errcheck
+				return
+			}
 		}
 
 		// TODO: check if service is overridable.
@@ -413,6 +421,12 @@ func (s *Server) handleConn(ctx context.Context, c net.Conn) {
 // validatePath checks if the path is valid and if it's a git repository.
 // It returns the valid path or empty string if the path is invalid.
 func (s *Server) validatePath(path string) string {
+	// Use filesystem interface, defaulting to OS filesystem for backward compatibility
+	fs := s.Filesystem
+	if fs == nil {
+		fs = osfs.New("/")
+	}
+
 	for _, suf := range []string{
 		// This must be the first entry!
 		"",
@@ -422,7 +436,7 @@ func (s *Server) validatePath(path string) string {
 	} {
 		suf = strings.ReplaceAll(suf, "/", string(os.PathSeparator))
 		_path := path + suf
-		_, err := os.Stat(_path)
+		_, err := fs.Stat(_path)
 		if err != nil {
 			s.debugf("path %q does not exist", _path)
 			if !os.IsNotExist(err) {
@@ -434,7 +448,7 @@ func (s *Server) validatePath(path string) string {
 			}
 		} else {
 			s.debugf("path %q exists", _path)
-			if isGitDir(_path) {
+			if isGitDirFS(fs, _path) {
 				s.debugf("path %q is a git repository", _path)
 				return _path
 			}

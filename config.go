@@ -10,6 +10,7 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/go-git/go-billy/v6"
 	"golang.org/x/sync/errgroup"
 )
 
@@ -127,6 +128,13 @@ type Server struct {
 	//
 	// Default is a no-op.
 	AccessHook AccessHook
+
+	// Filesystem is the filesystem interface to use for repository access.
+	// If nil, the daemon will use the OS filesystem (os package).
+	// This allows using in-memory filesystems or other custom implementations.
+	//
+	// Default is nil (uses OS filesystem).
+	Filesystem billy.Filesystem
 
 	enabled     map[Service]bool
 	listener    net.Listener
