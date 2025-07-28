@@ -13,9 +13,9 @@ require (
 	golang.org/x/sync v0.14.0
 )
 
-replace github.com/go-git/go-billy/v6 => github.com/this-kirke/go-billy/v6 v6.0.2
+replace github.com/go-git/go-billy/v6 => github.com/this-kirke/go-billy/v6 v6.0.3
 
-replace github.com/go-git/go-git/v6 => github.com/this-kirke/go-git/v6 v6.0.2
+replace github.com/go-git/go-git/v6 => github.com/this-kirke/go-git/v6 v6.0.3
 
 require (
 	dario.cat/mergo v1.0.1 // indirect
